@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MCT GAMER /// INSCRIPTION TOURNOI</title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;700;900&family=Rajdhani:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <style>
+        :root {
+            --fire-main: #FF5500;
+            --fire-dark: #cc0000;
+            --fire-light: #FFB300;
+        }
+        body {
+            font-family: 'Rajdhani', sans-serif;
+            background: #050300;
+            color: #fff;
+            overflow-x: hidden;
+            cursor: none;
+        }
+        .font-orbitron { font-family: 'Orbitron', sans-serif; }
+        
+        #canvas-container { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -1; }
+        
+        /* Cursor */
+        #cursor { position: fixed; top: 0; left: 0; width: 25px; height: 25px; border: 2px solid var(--fire-main); border-radius: 50%; pointer-events: none; z-index: 10000; transform: translate(-50%, -50%); transition: width 0.2s, height 0.2s; mix-blend-mode: screen; }
+        #cursor-dot { position: fixed; top: 0; left: 0; width: 4px; height: 4px; background: #fff; border-radius: 50%; pointer-events: none; z-index: 10000; transform: translate(-50%, -50%); }
+        body.hovered #cursor { width: 50px; height: 50px; background: rgba(255, 85, 0, 0.2); border-color: transparent; }
+
+        .glass-form {
+            background: rgba(10, 5, 0, 0.7);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 85, 0, 0.3);
+            box-shadow: 0 0 40px rgba(255, 85, 0, 0.1);
+        }
+
+        .input-field {
+            background: rgba(0, 0, 0, 0.5);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: white;
+            transition: all 0.3s;
+        }
+        .input-field:focus {
+            outline: none;
+            border-color: var(--fire-main);
+            box-shadow: 0 0 15px rgba(255, 85, 0, 0.3);
+            background: rgba(255, 85, 0, 0.05);
+        }
+
+        .slots-glow { text-shadow: 0 0 10px var(--fire-main), 0 0 20px var(--fire-dark); }
+        
+        /* Loader Spinner for button */
+        .spinner { border: 3px solid rgba(255,255,255,0.3); border-radius: 50%; border-top: 3px solid white; width: 20px; height: 20px; animation: spin 1s linear infinite; display: none; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    </style>
+</head>
+<body class="min-h-screen flex items-center justify-center p-6 relative">
+
+    <div id="cursor"></div>
+    <div id="cursor-dot"></div>
+    <div id="canvas-container"></div>
+
+    <a href="index.html" class="absolute top-8 left-8 text-gray-400 hover:text-[#FF5500] flex items-center gap-2 font-orbitron text-sm transition-colors interactive z-50">
+        <i data-lucide="arrow-left" class="w-5 h-5"></i> RETOUR À LA BASE
+    </a>
+
+    <div class="relative z-10 w-full max-w-xl mt-16 md:mt-0">
+        <div class="text-center mb-8">
+            <img src="unwatermarked_5048.jpg" alt="MCT LION" class="w-24 h-24 rounded-full mx-auto mb-4 border-2 border-[#FF5500] shadow-[0_0_20px_rgba(255,85,0,0.5)]">
+            <h1 class="font-orbitron text-4xl md:text-5xl font-black text-white uppercase tracking-wider mb-2">
+                REJOINS <span class="text-[#FF5500]">L'ARÈNE</span>
+            </h1>
+            
+            <div class="inline-block bg-black/60 border border-[#FF5500]/50 rounded-lg p-4 backdrop-blur-sm mt-4 w-full max-w-md">
+                <div class="flex items-center justify-between mb-2">
+                    <span class="font-orbitron text-sm font-bold text-gray-300">PLACES OCCUPÉES</span>
+                    <span class="font-orbitron text-2xl font-black text-[#FFB300] slots-glow"><span id="current-count">0</span> <span class="text-gray-500 text-lg">/ 20</span></span>
+                </div>
+                <div class="w-full h-2 bg-gray-800 rounded-full overflow-hidden">
+                    <div id="progress-bar" class="h-full bg-gradient-to-r from-[#FFB300] to-[#cc0000] transition-all duration-1000" style="width: 0%;"></div>
+                </div>
+            </div>
+        </div>
+
+        <div id="sold-out-msg" class="hidden glass-form p-10 rounded-xl text-center">
+            <i data-lucide="shield-alert" class="w-16 h-16 text-[#cc0000] mx-auto mb-4"></i>
+            <h2 class="text-3xl font-orbitron font-bold text-white mb-2">SOLD OUT</h2>
+            <p class="text-[#FF5500] font-bold tracking-widest">TOUTES LES PLACES SONT OCCUPÉES</p>
+            <p class="text-gray-400 mt-4 text-sm">Le tournoi est complet. Reste à l'affût pour la prochaine édition de MCT GAMER.</p>
+        </div>
+
+        <form id="registration-form" action="https://formspree.io/f/xlgwgdky" method="POST" class="glass-form p-8 rounded-xl space-y-6 relative overflow-hidden">
+            <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-[#FFB300] via-[#FF5500] to-[#cc0000]"></div>
+
+            <div class="space-y-2">
+                <label class="font-orbitron text-sm text-[#FF5500] tracking-widest font-bold flex items-center gap-2">
+                    <i data-lucide="target" class="w-4 h-4"></i> ID JOUEUR (PUBG) *
+                </label>
+                <input type="text" name="PUBG_ID" required class="input-field w-full px-4 py-3 rounded font-rajdhani text-lg interactive" placeholder="Ex: 5123456789" pattern="[0-9]+">
+            </div>
+
+            <div class="space-y-2">
+                <label class="font-orbitron text-sm text-[#FF5500] tracking-widest font-bold flex items-center gap-2">
+                    <i data-lucide="smartphone" class="w-4 h-4"></i> NUMÉRO WHATSAPP *
+                </label>
+                <input type="tel" name="WhatsApp" required class="input-field w-full px-4 py-3 rounded font-rajdhani text-lg interactive" placeholder="Ex: +33 6 12 34 56 78">
+            </div>
+
+            <div class="space-y-2">
+                <label class="font-orbitron text-sm text-gray-400 tracking-widest font-bold flex items-center gap-2">
+                    <i data-lucide="mail" class="w-4 h-4"></i> EMAIL <span class="text-xs font-normal opacity-60">(Optionnel)</span>
+                </label>
+                <input type="email" name="Email" class="input-field w-full px-4 py-3 rounded font-rajdhani text-lg interactive" placeholder="email@exemple.com">
+            </div>
+
+            <button type="submit" id="submit-btn" class="w-full bg-gradient-to-r from-[#FF5500] to-[#cc0000] text-white font-orbitron font-black text-xl py-4 rounded tracking-widest hover:scale-[1.02] hover:shadow-[0_0_30px_rgba(255,85,0,0.6)] transition-all interactive mt-6 flex items-center justify-center gap-3 disabled:opacity-50 disabled:cursor-not-allowed">
+                <span id="btn-text">CONFIRMER L'INSCRIPTION</span>
+                <div class="spinner" id="btn-spinner"></div>
+            </button>
+        </form>
+    </div>
+
+    <script>
+        lucide.createIcons();
+
+        // ==========================================
+        // SYSTÈME DE COMPTEUR GLOBAL (SERVERLESS)
+        // ==========================================
+        const MAX_SPOTS = 20;
+        // On utilise une API gratuite pour stocker le chiffre publiquement
+        const apiUrl = "https://api.counterapi.dev/v1/mctgamer_tournoi/pubg_inscriptions";
+
+        const countDisplay = document.getElementById('current-count');
+        const progressBar = document.getElementById('progress-bar');
+        const form = document.getElementById('registration-form');
+        const soldOutMsg = document.getElementById('sold-out-msg');
+        const submitBtn = document.getElementById('submit-btn');
+        const btnText = document.getElementById('btn-text');
+        const btnSpinner = document.getElementById('btn-spinner');
+
+        // 1. Récupérer le nombre actuel au chargement de la page
+        async function fetchCurrentCount() {
+            try {
+                const response = await fetch(apiUrl);
+                const data = await response.json();
+                const currentCount = data.count || 0;
+                updateUI(currentCount);
+            } catch (error) {
+                console.log("Erreur API de comptage, affichage par défaut.");
+                updateUI(0); // Securité si l'API plante
+            }
+        }
+
+        // 2. Mettre à jour l'affichage
+        function updateUI(count) {
+            countDisplay.innerText = count;
+            const percent = Math.min((count / MAX_SPOTS) * 100, 100);
+            progressBar.style.width = `${percent}%`;
+
+            // Si le tournoi est plein, on cache le formulaire !
+            if (count >= MAX_SPOTS) {
+                form.style.display = 'none';
+                soldOutMsg.style.display = 'block';
+                soldOutMsg.classList.add('animate-pulse');
+            }
+        }
+
+        fetchCurrentCount(); // Lancement au démarrage
+
+        // 3. Intercepter l'envoi du formulaire
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault(); // On bloque l'envoi normal pour faire notre magie
+
+            // On désactive le bouton
+            submitBtn.disabled = true;
+            btnText.innerText = "TRAITEMENT...";
+            btnSpinner.style.display = "block";
+
+            try {
+                // A. On envoie les données secrètement à ton email (Formspree)
+                const formData = new FormData(form);
+                await fetch(form.action, {
+                    method: 'POST',
+                    body: formData,
+                    headers: { 'Accept': 'application/json' }
+                });
+
+                // B. On fait +1 sur le compteur mondial !
+                const countResponse = await fetch(apiUrl + '/up');
+                const countData = await countResponse.json();
+                updateUI(countData.count);
+
+                // C. On affiche un beau message de succès
+                form.innerHTML = `
+                    <div class="text-center py-10">
+                        <i data-lucide="check-circle" class="w-20 h-20 text-[#ccff00] mx-auto mb-6 drop-shadow-[0_0_15px_rgba(204,255,0,0.5)]"></i>
+                        <h2 class="text-3xl font-orbitron font-bold text-white mb-2">INSCRIPTION RÉUSSIE !</h2>
+                        <p class="text-[#FF5500] font-bold tracking-widest mb-4">T'ES DANS LA MATRICE.</p>
+                        <p class="text-gray-400">Garde un œil sur ton WhatsApp, le capitaine recevra les accès bientôt.</p>
+                    </div>
+                `;
+                lucide.createIcons();
+
+            } catch (error) {
+                alert("Erreur de connexion. Vérifie ta connexion internet et réessaie.");
+                submitBtn.disabled = false;
+                btnText.innerText = "CONFIRMER L'INSCRIPTION";
+                btnSpinner.style.display = "none";
+            }
+        });
+
+        // ==========================================
+        // CUSTOM CURSOR & 3D BACKGROUND (Touche pas, c'est parfait)
+        // ==========================================
+        const cursor = document.getElementById('cursor');
+        const cursorDot = document.getElementById('cursor-dot');
+        const interactives = document.querySelectorAll('.interactive, input, textarea, button');
+        let mX = window.innerWidth/2, mY = window.innerHeight/2;
+        let cX = mX, cY = mY;
+
+        document.addEventListener('mousemove', (e) => {
+            mX = e.clientX; mY = e.clientY;
+            cursorDot.style.left = `${mX}px`; cursorDot.style.top = `${mY}px`;
+        });
+        function renderCursor() {
+            cX += (mX - cX) * 0.2; cY += (mY - cY) * 0.2;
+            cursor.style.left = `${cX}px`; cursor.style.top = `${cY}px`;
+            requestAnimationFrame(renderCursor);
+        }
+        renderCursor();
+        interactives.forEach(el => {
+            el.addEventListener('mouseenter', () => document.body.classList.add('hovered'));
+            el.addEventListener('mouseleave', () => document.body.classList.remove('hovered'));
+        });
+
+        const scene = new THREE.Scene();
+        const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+        const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        document.getElementById('canvas-container').appendChild(renderer.domElement);
+        camera.position.z = 30;
+        
+        const geo = new THREE.BufferGeometry();
+        const count = 800;
+        const pos = new Float32Array(count * 3);
+        const col = new Float32Array(count * 3);
+        
+        for(let i=0; i<count*3; i+=3) {
+            pos[i] = (Math.random() - 0.5) * 100;
+            pos[i+1] = (Math.random() - 0.5) * 100;
+            pos[i+2] = (Math.random() - 0.5) * 100;
+            const r = Math.random();
+            if(r < 0.5) { col[i]=1; col[i+1]=0.33; col[i+2]=0; } 
+            else if(r < 0.8) { col[i]=1; col[i+1]=0.7; col[i+2]=0; } 
+            else { col[i]=0.8; col[i+1]=0; col[i+2]=0; } 
+        }
+        geo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+        geo.setAttribute('color', new THREE.BufferAttribute(col, 3));
+        const mat = new THREE.PointsMaterial({ size: 0.2, vertexColors: true, transparent: true, opacity: 0.4, blending: THREE.AdditiveBlending });
+        const mesh = new THREE.Points(geo, mat);
+        scene.add(mesh);
+        
+        function animate() {
+            requestAnimationFrame(animate);
+            const positions = geo.attributes.position.array;
+            for(let i=1; i<count*3; i+=3) {
+                positions[i] += 0.05;
+                if(positions[i] > 50) positions[i] = -50;
+            }
+            geo.attributes.position.needsUpdate = true;
+            mesh.rotation.y += 0.001;
+            renderer.render(scene, camera);
+        }
+        animate();
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        });
+    </script>
+</body>
+</html>
